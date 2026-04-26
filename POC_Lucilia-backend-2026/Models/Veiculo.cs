@@ -22,5 +22,7 @@ namespace POC_Lucilia_backend_2026.Models
         [Required(ErrorMessage = "Obrigatório informar o Ano do Modelo!")]
         [Display(Name = "Ano do Modelo")]
         public int AnoModelo { get; set; }
+
+        public ICollection<Consumo> Consumos { get; set; }
     }
 }
