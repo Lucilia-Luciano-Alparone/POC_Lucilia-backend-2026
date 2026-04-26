@@ -16,5 +16,14 @@ namespace POC_Lucilia_backend_2026.Models
         [DataType(DataType.Password)]
         public string Senha { get; set; }
 
+        [Required(ErrorMessage = "Obrigatório informar o perfil")]
+        public Perfil Perfil {  get; set; }
+
+    }
+
+    public enum Perfil
+    {
+        Administrador,
+        Usuario
     }
 }
