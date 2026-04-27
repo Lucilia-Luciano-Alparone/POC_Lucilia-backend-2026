@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +12,7 @@ using POC_Lucilia_backend_2026.Models;
 
 namespace POC_Lucilia_backend_2026.Controllers
 {
+    [Authorize(Roles ="Administrador")]
     public class UsuariosController : Controller
     {
         private readonly AppDbContext _context;
@@ -22,6 +26,72 @@ namespace POC_Lucilia_backend_2026.Controllers
         public async Task<IActionResult> Index()
         {
             return View(await _context.Usuarios.ToListAsync());
+        }
+
+        [AllowAnonymous]
+        public IActionResult AccessDanied()
+        {
+            return View();
+        }
+
+        [AllowAnonymous]
+        public IActionResult Login()
+        {
+            return View();
+        }
+
+        [AllowAnonymous]
+        [HttpPost]
+        public async Task<IActionResult> Login(Usuario usuario)
+        {
+            var dados = await _context.Usuarios.FindAsync(usuario.Id);
+
+            if (dados == null)
+            {
+                ViewBag.Message = "Usuário e/ou senha inválidos.!";
+                return View();
+            }
+
+            bool SenhaOk = BCrypt.Net.BCrypt.Verify(usuario.Senha, dados.Senha);
+
+            if (SenhaOk)
+            {
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, dados.Nome),
+                    new Claim(ClaimTypes.NameIdentifier, dados.Id.ToString()),
+                    new Claim(ClaimTypes.Role, dados.Perfil.ToString())
+                };
+
+                var usuarioIdentity = new ClaimsIdentity(claims, "Cookies");
+
+                ClaimsPrincipal principal = new ClaimsPrincipal(usuarioIdentity);
+
+                var props = new AuthenticationProperties
+                {
+                    AllowRefresh = true,
+                    ExpiresUtc = DateTime.UtcNow.AddHours(8),
+                    IsPersistent = true
+                };
+
+                await HttpContext.SignInAsync(principal, props);
+
+                return Redirect("/");
+            }
+            else
+            {
+                ViewBag.Message = "Usuário e/ou senha inválidos.!";
+            }
+
+                return View();
+        }
+
+        [AllowAnonymous]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync();
+
+            return RedirectToAction("Login", "Usuarios");
         }
 
         // GET: Usuarios/Details/5

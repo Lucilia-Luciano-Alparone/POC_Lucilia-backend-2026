@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using POC_Lucilia_backend_2026.Models;
 
 namespace POC_Lucilia_backend_2026.Controllers
 {
+    [Authorize]
     public class VeiculosController  :  Controller
     {
         private readonly AppDbContext _context;
